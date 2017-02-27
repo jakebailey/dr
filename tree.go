@@ -1,6 +1,5 @@
 package dr
 
-
 type regexTree struct {
 	stack []Regex
 }
@@ -27,21 +26,21 @@ func (t *regexTree) empty() bool {
 }
 
 func (t *regexTree) char(r rune) {
-	t.push(Char{
+	t.push(&Char{
 		R: r,
 	})
 }
 
 func (t *regexTree) kleene() {
 	r := t.pop()
-	t.push(Kleene{
+	t.push(&Kleene{
 		R: r,
 	})
 }
 
 func (t *regexTree) comp() {
 	r := t.pop()
-	t.push(Comp{
+	t.push(&Comp{
 		R: r,
 	})
 }
@@ -50,7 +49,7 @@ func (t *regexTree) concat() {
 	a := t.pop()
 	b := t.pop()
 
-	t.push(Concat{
+	t.push(&Concat{
 		L: b,
 		R: a,
 	})
@@ -60,7 +59,7 @@ func (t *regexTree) union() {
 	a := t.pop()
 	b := t.pop()
 
-	t.push(Union{
+	t.push(&Union{
 		L: b,
 		R: a,
 	})

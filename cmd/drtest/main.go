@@ -19,12 +19,12 @@ func main() {
 
 	fmt.Println()
 
-	r := dr.Concat{
-		L: dr.Char{R: 'a'},
-		R: dr.Concat{
-			L: dr.Char{R: 'b'},
-			R: dr.Kleene{
-				R: dr.Char{R: 'c'},
+	r := &dr.Concat{
+		L: &dr.Char{R: 'a'},
+		R: &dr.Concat{
+			L: &dr.Char{R: 'b'},
+			R: &dr.Kleene{
+				R: &dr.Char{R: 'c'},
 			},
 		},
 	}
