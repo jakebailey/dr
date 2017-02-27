@@ -72,6 +72,7 @@ var escaped = map[rune]bool{
 	'*':  true,
 	'+':  true,
 	'\\': true,
+	'.':  true,
 }
 
 func (c *Char) String() string {
@@ -92,6 +93,25 @@ func (c *Char) Derivative(r rune) Regex {
 
 // AcceptsEpsilon returns false.
 func (*Char) AcceptsEpsilon() bool {
+	return false
+}
+
+// Any accepts any single character.
+type Any struct{}
+
+var any *Any
+
+func (*Any) String() string {
+	return "."
+}
+
+// Derivative returns Epsilon.
+func (*Any) Derivative(rune) Regex {
+	return epsilon
+}
+
+// AcceptsEpsilon return false.
+func (*Any) AcceptsEpsilon() bool {
 	return false
 }
 

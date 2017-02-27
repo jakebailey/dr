@@ -13,7 +13,7 @@ Union <- Concat !('+' Union)
 
 Concat <- Unary !Concat
         / Unary Concat { p.concat() }
-
+&Any{}
 Unary <- Comp / Kleene / Factor
 
 Comp <- '!' Factor { p.comp() }
@@ -22,5 +22,6 @@ Kleene <- Factor '*' { p.kleene() }
 
 Factor <- Char / '(' Regex ')'
 
-Char <- < [^+*!\\()] >     { p.char(firstRune(text)) }
-      / '\\' < [+*!\\()] > { p.char(lastRune(text)) }
+Char <- < [^+*!\\().] >     { p.char(firstRune(text)) }
+      / '\\' < [+*!\\().] > { p.char(lastRune(text)) }
+      / '.'                 { p.any() }

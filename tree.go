@@ -31,6 +31,10 @@ func (t *regexTree) char(r rune) {
 	})
 }
 
+func (t *regexTree) any() {
+	t.push(any)
+}
+
 func (t *regexTree) kleene() {
 	r := t.pop()
 	t.push(&Kleene{
