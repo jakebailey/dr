@@ -26,45 +26,33 @@ func (t *regexTree) empty() bool {
 }
 
 func (t *regexTree) char(r rune) {
-	t.push(&Char{
-		R: r,
-	})
+	t.push(NewChar(r))
 }
 
 func (t *regexTree) any() {
-	t.push(any)
+	t.push(NewAny())
 }
 
 func (t *regexTree) kleene() {
 	r := t.pop()
-	t.push(&Kleene{
-		R: r,
-	})
+	t.push(NewKleene(r))
 }
 
 func (t *regexTree) comp() {
 	r := t.pop()
-	t.push(&Comp{
-		R: r,
-	})
+	t.push(NewComp(r))
 }
 
 func (t *regexTree) concat() {
 	a := t.pop()
 	b := t.pop()
 
-	t.push(&Concat{
-		L: b,
-		R: a,
-	})
+	t.push(NewConcat(b, a))
 }
 
 func (t *regexTree) union() {
 	a := t.pop()
 	b := t.pop()
 
-	t.push(&Union{
-		L: b,
-		R: a,
-	})
+	t.push(NewUnion(b, a))
 }

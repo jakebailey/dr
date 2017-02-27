@@ -22,47 +22,55 @@ func Match(r Regex, s string) bool {
 	return r.AcceptsEpsilon()
 }
 
-// Empty accepts nothing.
-type Empty struct{}
+type empty struct{}
 
-var empty *Empty
+// NewEmpty creates a regex that accepts nothing.
+func NewEmpty() Regex {
+	return (*empty)(nil)
+}
 
-func (*Empty) String() string {
+func (*empty) String() string {
 	return "∅"
 }
 
-// Derivative returns Empty.
-func (*Empty) Derivative(rune) Regex {
-	return empty
+// Derivative returns empty.
+func (*empty) Derivative(rune) Regex {
+	return NewEmpty()
 }
 
 // AcceptsEpsilon returns false.
-func (*Empty) AcceptsEpsilon() bool {
+func (*empty) AcceptsEpsilon() bool {
 	return false
 }
 
-// Epsilon accepts the empty string.
-type Epsilon struct{}
+type epsilon struct{}
 
-var epsilon *Epsilon
+// NewEpsilon creates a regex that only accepts the empty string.
+func NewEpsilon() Regex {
+	return (*epsilon)(nil)
+}
 
-func (*Epsilon) String() string {
+func (*epsilon) String() string {
 	return "ε"
 }
 
-// Derivative returns Empty.
-func (*Epsilon) Derivative(rune) Regex {
-	return empty
+// Derivative returns empty.
+func (*epsilon) Derivative(rune) Regex {
+	return NewEmpty()
 }
 
 // AcceptsEpsilon returns true.
-func (*Epsilon) AcceptsEpsilon() bool {
+func (*epsilon) AcceptsEpsilon() bool {
 	return true
 }
 
-// Char only accepts a specific character.
-type Char struct {
-	R rune
+type char struct {
+	r rune
+}
+
+// NewChar creates a regex that only accepts the given character.
+func NewChar(r rune) Regex {
+	return &char{r: r}
 }
 
 var escaped = map[rune]bool{
@@ -75,157 +83,189 @@ var escaped = map[rune]bool{
 	'.':  true,
 }
 
-func (c *Char) String() string {
-	if escaped[c.R] {
-		return fmt.Sprintf("\\%c", c.R)
+func (c *char) String() string {
+	if escaped[c.r] {
+		return fmt.Sprintf("\\%c", c.r)
 	}
-	return fmt.Sprintf("%c", c.R)
+	return fmt.Sprintf("%c", c.r)
 }
 
 // Derivative returns Epsilon if r is Char's value,
 // otherwise Empty.
-func (c *Char) Derivative(r rune) Regex {
-	if c.R == r {
-		return epsilon
+func (c *char) Derivative(r rune) Regex {
+	if c.r == r {
+		return NewEpsilon()
 	}
-	return empty
+	return NewEmpty()
 }
 
 // AcceptsEpsilon returns false.
-func (*Char) AcceptsEpsilon() bool {
+func (*char) AcceptsEpsilon() bool {
 	return false
 }
 
-// Any accepts any single character.
-type Any struct{}
+type any struct{}
 
-var any *Any
+// NewAny creates a regex that accepts any single character.
+func NewAny() Regex {
+	return (*any)(nil)
+}
 
-func (*Any) String() string {
+func (*any) String() string {
 	return "."
 }
 
-// Derivative returns Epsilon.
-func (*Any) Derivative(rune) Regex {
-	return epsilon
+// Derivative returns epsilon.
+func (*any) Derivative(rune) Regex {
+	return NewEpsilon()
 }
 
 // AcceptsEpsilon return false.
-func (*Any) AcceptsEpsilon() bool {
+func (*any) AcceptsEpsilon() bool {
 	return false
 }
 
 // Union accepts the union of two regexes.
-type Union struct {
-	L Regex
-	R Regex
+type union struct {
+	l Regex
+	r Regex
 }
 
-func (u *Union) String() string {
-	return fmt.Sprintf("(%v)+(%v)", u.L, u.R)
+// NewUnion creates a regex that accepts the union of two regexes,
+// taking into consideration the simplifiying equations.
+func NewUnion(l, r Regex) Regex {
+	switch l.(type) {
+	case *empty:
+		return r
+	default:
+		return &union{
+			l: l,
+			r: r,
+		}
+	}
+}
+
+func (u *union) String() string {
+	return fmt.Sprintf("(%v)+(%v)", u.l, u.r)
 }
 
 // Derivative returns the union of the derivatives
 // of this union.
-func (u *Union) Derivative(r rune) Regex {
-	return &Union{
-		L: u.L.Derivative(r),
-		R: u.R.Derivative(r),
-	}
+func (u *union) Derivative(r rune) Regex {
+	return NewUnion(u.l.Derivative(r), u.r.Derivative(r))
 }
 
 // AcceptsEpsilon returns true if either of the elements
 // in the union accepts epsilon.
-func (u *Union) AcceptsEpsilon() bool {
-	return u.L.AcceptsEpsilon() || u.R.AcceptsEpsilon()
+func (u *union) AcceptsEpsilon() bool {
+	return u.l.AcceptsEpsilon() || u.r.AcceptsEpsilon()
 }
 
-// Concat accepts the concatenation of two regexes.
-type Concat struct {
-	L Regex
-	R Regex
+type concat struct {
+	l Regex
+	r Regex
 }
 
-func (c *Concat) String() string {
-	return fmt.Sprintf("%v%v", c.L, c.R)
+// NewConcat creates a regex that accepts the concatenation of two regexes,
+// taking into consideration the simplifiying equations.
+func NewConcat(l, r Regex) Regex {
+	switch l.(type) {
+	case *empty:
+		return NewEmpty()
+	case *epsilon:
+		return r
+	default:
+		return &concat{
+			l: l,
+			r: r,
+		}
+	}
+}
+
+func (c *concat) String() string {
+	return fmt.Sprintf("%v%v", c.l, c.r)
 }
 
 // Derivative returns the union of the concatenation of
 // the derivative of L and R, and the derivative of R if
 // if L accepts epsilon, otherwise Empty.
-func (c *Concat) Derivative(r rune) Regex {
+func (c *concat) Derivative(r rune) Regex {
 	var right Regex
-	if c.L.AcceptsEpsilon() {
-		right = c.R.Derivative(r)
+	if c.l.AcceptsEpsilon() {
+		right = c.r.Derivative(r)
 	} else {
-		right = empty
+		right = NewEmpty()
 	}
 
-	return &Union{
-		L: &Concat{
-			L: c.L.Derivative(r),
-			R: c.R,
-		},
-		R: right,
-	}
+	return NewUnion(
+		NewConcat(c.l.Derivative(r), c.r),
+		right,
+	)
 }
 
 // AcceptsEpsilon returns true if both elements accept epsilon.
-func (c *Concat) AcceptsEpsilon() bool {
-	return c.L.AcceptsEpsilon() && c.R.AcceptsEpsilon()
+func (c *concat) AcceptsEpsilon() bool {
+	return c.l.AcceptsEpsilon() && c.r.AcceptsEpsilon()
 }
 
-// Comp accepts the complement of a regex.
-type Comp struct {
-	R Regex
+type comp struct {
+	r Regex
 }
 
-func (c *Comp) String() string {
-	return fmt.Sprintf("!(%v)", c.R)
+// NewComp creates a regex that accepts the complement of a regex.
+func NewComp(r Regex) Regex {
+	return &comp{
+		r: r,
+	}
+}
+
+func (c *comp) String() string {
+	return fmt.Sprintf("!(%v)", c.r)
 }
 
 // Derivative returns the complement of the derivative of the
 // complemented regex.
-func (c *Comp) Derivative(r rune) Regex {
-	return &Comp{
-		R: c.R.Derivative(r),
-	}
+func (c *comp) Derivative(r rune) Regex {
+	return NewComp(c.r.Derivative(r))
 }
 
 // AcceptsEpsilon returns true if the complemented regex
 // does not accept epsilon.
-func (c *Comp) AcceptsEpsilon() bool {
-	return !c.R.AcceptsEpsilon()
+func (c *comp) AcceptsEpsilon() bool {
+	return !c.r.AcceptsEpsilon()
 }
 
-// Kleene accepts the Kleene star of a regex.
-type Kleene struct {
+type kleene struct {
 	R Regex
 }
 
-func (k *Kleene) String() string {
+// NewKleene creates a regex that accepts the Kleene star of a regex.
+func NewKleene(r Regex) Regex {
+	return &kleene{
+		R: r,
+	}
+}
+
+func (k *kleene) String() string {
 	return fmt.Sprintf("(%v)*", k.R)
 }
 
 // Derivative returns the concatenation of the derivative
 // of the Kleene star'd regex and the regex.
-func (k *Kleene) Derivative(r rune) Regex {
-	return &Concat{
-		L: k.R.Derivative(r),
-		R: k,
-	}
+func (k *kleene) Derivative(r rune) Regex {
+	return NewConcat(k.R.Derivative(r), k)
 }
 
 // AcceptsEpsilon returns true.
-func (k *Kleene) AcceptsEpsilon() bool {
+func (k *kleene) AcceptsEpsilon() bool {
 	return true
 }
 
 var (
-	_ Regex = &Empty{}
-	_ Regex = &Epsilon{}
-	_ Regex = &Char{}
-	_ Regex = &Union{}
-	_ Regex = &Comp{}
-	_ Regex = &Kleene{}
+	_ Regex = &empty{}
+	_ Regex = &epsilon{}
+	_ Regex = &char{}
+	_ Regex = &union{}
+	_ Regex = &comp{}
+	_ Regex = &kleene{}
 )

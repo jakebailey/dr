@@ -19,15 +19,13 @@ func main() {
 
 	fmt.Println()
 
-	r := &dr.Concat{
-		L: &dr.Char{R: 'a'},
-		R: &dr.Concat{
-			L: &dr.Char{R: 'b'},
-			R: &dr.Kleene{
-				R: &dr.Char{R: 'c'},
-			},
-		},
-	}
+	r := dr.NewConcat(
+		dr.NewChar('a'),
+		dr.NewConcat(
+			dr.NewChar('b'),
+			dr.NewKleene(dr.NewChar('c')),
+		),
+	)
 
 	fmt.Println("matching against", r)
 

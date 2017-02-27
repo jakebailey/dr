@@ -20,7 +20,9 @@ aaa+bbb => (aaa)+(bbb)
 \+\++\*(\!\\) => (\+\+)+(\*\!\\)
 
 matching against ab(c)*
-: false
+: false&Comp{
+		R: ,
+	}
 a: false
 ab: true
 abc: true
@@ -29,3 +31,7 @@ abccccc: true
 
 Which shows the input and output after parsing and generating the regex, as well
 as various examples of matching a common expression.
+
+In addition to those rules described in class, I've also added a rule for `.` (any),
+which accepts any single character, although, it could have been represented by
+`(!a+a)`.
