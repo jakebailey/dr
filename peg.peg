@@ -1,0 +1,26 @@
+package dr
+
+type parseTree Peg {
+    regexTree
+}
+
+Root <- Regex !.
+
+Regex <- Union
+
+Union <- Concat !('+' Union)
+       / Concat '+' Union { p.union() }
+
+Concat <- Unary !Concat
+        / Unary Concat { p.concat() }
+
+Unary <- Comp / Kleene / Factor
+
+Comp <- '!' Factor { p.comp() }
+
+Kleene <- Factor '*' { p.kleene() }
+
+Factor <- Char / '(' Regex ')'
+
+Char <- < [^+*!\\()] >     { p.char(firstRune(text)) }
+      / '\\' < [+*!\\()] > { p.char(lastRune(text)) }
