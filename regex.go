@@ -12,7 +12,7 @@ type Regex interface {
 }
 
 // Match returns true if the string matches the regex.
-// This is sugar for calling Deriative on the regex
+// This is sugar for calling Derivative on the regex
 // repeatedly, then checking if the current state
 // accepts epsilon.
 func Match(r Regex, s string) bool {
