@@ -13,7 +13,7 @@ Union <- Concat !('+' Union)
 
 Concat <- Unary !Concat
         / Unary Concat { p.concat() }
-&Any{}
+
 Unary <- Comp / Kleene / Factor
 
 Comp <- '!' Factor { p.comp() }
