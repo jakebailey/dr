@@ -11,6 +11,9 @@ so it might as well be public. The parser was the time consuming part.
 
 "dr" comes from dR, because I think I'm funny.
 
+The syntax uses `!` for complement, `*` for the Kleene star, `+` for union, and
+`.` for any character.
+
 The output of the test program in `cmd/drtest` is:
 
 ```
