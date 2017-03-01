@@ -14,6 +14,8 @@ so it might as well be public. The parser was the time consuming part.
 The syntax uses `!` for complement, `*` for the Kleene star, `+` for union, and
 `.` for any character.
 
+The characters `+*!\().` can be escaped by prefixing with a `\`.
+
 The output of the test program in `cmd/drtest` is:
 
 ```

@@ -236,24 +236,24 @@ func (c *comp) AcceptsEpsilon() bool {
 }
 
 type kleene struct {
-	R Regex
+	r Regex
 }
 
 // NewKleene creates a regex that accepts the Kleene star of a regex.
 func NewKleene(r Regex) Regex {
 	return &kleene{
-		R: r,
+		r: r,
 	}
 }
 
 func (k *kleene) String() string {
-	return fmt.Sprintf("(%v)*", k.R)
+	return fmt.Sprintf("(%v)*", k.r)
 }
 
 // Derivative returns the concatenation of the derivative
 // of the Kleene star'd regex and the regex.
 func (k *kleene) Derivative(r rune) Regex {
-	return NewConcat(k.R.Derivative(r), k)
+	return NewConcat(k.r.Derivative(r), k)
 }
 
 // AcceptsEpsilon returns true.
