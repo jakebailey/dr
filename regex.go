@@ -8,7 +8,7 @@ import "fmt"
 type Regex interface {
 	fmt.Stringer
 	Derivative(rune) Regex
-	AcceptsEpsilon() bool
+	Accepting() bool
 }
 
 // Match returns true if the string matches the regex.
@@ -19,7 +19,7 @@ func Match(r Regex, s string) bool {
 	for _, c := range s {
 		r = r.Derivative(c)
 	}
-	return r.AcceptsEpsilon()
+	return r.Accepting()
 }
 
 type empty struct{}
@@ -38,8 +38,8 @@ func (*empty) Derivative(rune) Regex {
 	return NewEmpty()
 }
 
-// AcceptsEpsilon returns false.
-func (*empty) AcceptsEpsilon() bool {
+// Accepting returns false.
+func (*empty) Accepting() bool {
 	return false
 }
 
@@ -59,8 +59,8 @@ func (*epsilon) Derivative(rune) Regex {
 	return NewEmpty()
 }
 
-// AcceptsEpsilon returns true.
-func (*epsilon) AcceptsEpsilon() bool {
+// Accepting returns true.
+func (*epsilon) Accepting() bool {
 	return true
 }
 
@@ -99,8 +99,8 @@ func (c *char) Derivative(r rune) Regex {
 	return NewEmpty()
 }
 
-// AcceptsEpsilon returns false.
-func (*char) AcceptsEpsilon() bool {
+// Accepting returns false.
+func (*char) Accepting() bool {
 	return false
 }
 
@@ -120,8 +120,8 @@ func (*any) Derivative(rune) Regex {
 	return NewEpsilon()
 }
 
-// AcceptsEpsilon return false.
-func (*any) AcceptsEpsilon() bool {
+// Accepting return false.
+func (*any) Accepting() bool {
 	return false
 }
 
@@ -155,10 +155,10 @@ func (u *union) Derivative(r rune) Regex {
 	return NewUnion(u.l.Derivative(r), u.r.Derivative(r))
 }
 
-// AcceptsEpsilon returns true if either of the elements
-// in the union accepts epsilon.
-func (u *union) AcceptsEpsilon() bool {
-	return u.l.AcceptsEpsilon() || u.r.AcceptsEpsilon()
+// Accepting returns true if either of the elements
+// in the union are accepting.
+func (u *union) Accepting() bool {
+	return u.l.Accepting() || u.r.Accepting()
 }
 
 type concat struct {
@@ -191,7 +191,7 @@ func (c *concat) String() string {
 // if L accepts epsilon, otherwise Empty.
 func (c *concat) Derivative(r rune) Regex {
 	var right Regex
-	if c.l.AcceptsEpsilon() {
+	if c.l.Accepting() {
 		right = c.r.Derivative(r)
 	} else {
 		right = NewEmpty()
@@ -203,9 +203,9 @@ func (c *concat) Derivative(r rune) Regex {
 	)
 }
 
-// AcceptsEpsilon returns true if both elements accept epsilon.
-func (c *concat) AcceptsEpsilon() bool {
-	return c.l.AcceptsEpsilon() && c.r.AcceptsEpsilon()
+// Accepting returns true if both elements are accepting.
+func (c *concat) Accepting() bool {
+	return c.l.Accepting() && c.r.Accepting()
 }
 
 type comp struct {
@@ -229,10 +229,10 @@ func (c *comp) Derivative(r rune) Regex {
 	return NewComp(c.r.Derivative(r))
 }
 
-// AcceptsEpsilon returns true if the complemented regex
-// does not accept epsilon.
-func (c *comp) AcceptsEpsilon() bool {
-	return !c.r.AcceptsEpsilon()
+// Accepting returns true if the complemented regex
+// does not accepting.
+func (c *comp) Accepting() bool {
+	return !c.r.Accepting()
 }
 
 type kleene struct {
@@ -256,8 +256,8 @@ func (k *kleene) Derivative(r rune) Regex {
 	return NewConcat(k.r.Derivative(r), k)
 }
 
-// AcceptsEpsilon returns true.
-func (k *kleene) AcceptsEpsilon() bool {
+// Accepting returns true.
+func (k *kleene) Accepting() bool {
 	return true
 }
 
