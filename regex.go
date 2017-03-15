@@ -264,6 +264,7 @@ func (k *kleene) Accepting() bool {
 var (
 	_ Regex = &empty{}
 	_ Regex = &epsilon{}
+	_ Regex = &any{}
 	_ Regex = &char{}
 	_ Regex = &union{}
 	_ Regex = &comp{}
